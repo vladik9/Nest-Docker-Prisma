@@ -17,11 +17,13 @@ model User{
 id Int @id @default (autoincrement())
 createdAt DateTime @default(now())
 updatedAt DateTime @updatedAt()
-email String
+email String @unique
 hashPassword String
 firstName String?
 lastName String?
-
+ 
+@@map("users")
+Cars Car[]
 }
 
 model Car{
@@ -31,4 +33,8 @@ updatedAt DateTime @updatedAt()
 year Int
 color String
 seats Int
+userId Int
+
+user User @relation(fields: [userId], references: [id])
+@@map("cars")
 }
