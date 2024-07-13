@@ -19,9 +19,10 @@ createdAt DateTime @default(now())
 updatedAt DateTime @updatedAt()
 email String @unique
 hashPassword String
+// ? this if for optional field
 firstName String?
 lastName String?
- 
+//this is renaming inital User table to Users using a migration
 @@map("users")
 Cars Car[]
 }

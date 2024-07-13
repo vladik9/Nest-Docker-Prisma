@@ -1,10 +1,17 @@
-import { AuthDto } from './dto/auth.dto';
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { User } from '@prisma/client';
 import * as argon from 'argon2';
+import { PrismaService } from '../prisma/prisma.service';
+import { AuthDto } from './dto/auth.dto';
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private jtw: JwtService,
+    private config: ConfigService,
+  ) {}
   async logIn(dto: AuthDto) {
     const existingUser = await this.prisma.user.findUnique({
       where: {
@@ -13,10 +20,6 @@ export class AuthService {
     });
     if (!existingUser) {
       throw new ForbiddenException("user don't exist");
-      // return {
-      //   message: "user don't exist",
-      //   status: 404,
-      // };
     } else {
       const isValid = await argon.verify(
         existingUser.hashPassword,
@@ -24,13 +27,8 @@ export class AuthService {
       );
       if (!isValid) {
         throw new ForbiddenException('password is not valid');
-        // return {
-        //   message: 'password is not valid',
-        //   status: 401,
-        // };
       }
-      delete existingUser.hashPassword;
-      return existingUser;
+      return this.singToken(existingUser);
     }
   }
   async singIn(dto: AuthDto) {
@@ -41,10 +39,6 @@ export class AuthService {
     });
     if (existingUser) {
       throw new ForbiddenException('user already exist');
-      // return {
-      //   message: 'user already exist',
-      //   status: 401,
-      // };
     }
     const hash = await argon.hash(dto.password);
     const user = await this.prisma.user.create({
@@ -53,38 +47,24 @@ export class AuthService {
         hashPassword: hash,
       },
     });
-    delete user.hashPassword;
-    return user;
+    return this.singToken(user);
   }
 
-  async logOut(dto: AuthDto) {
-    const existingUser = await this.prisma.user.findUnique({
-      where: {
-        email: dto.email,
-      },
-    });
-    if (!existingUser) {
-      throw new ForbiddenException("user don't exist");
-      // return {
-      //   message: "user don't exist",
-      //   status: 404,
-      // };
-    } else {
-      const isValid = await argon.verify(
-        existingUser.hashPassword,
-        dto.password,
-      );
-      if (!isValid) {
-        throw new ForbiddenException('password is not valid');
-        // return {
-        //   message: 'password is not valid',
-        //   status: 401,
-        // };
-      }
-      return {
-        message: 'log out success',
-        status: 200,
-      };
-    }
+  async logOut() {
+    return {
+      access_token: null,
+    };
+  }
+  async singToken(user: User): Promise<{ access_token: string }> {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+    };
+    return {
+      access_token: await this.jtw.signAsync(payload, {
+        expiresIn: '15m',
+        secret: this.config.get('JWT_SECRET'),
+      }),
+    };
   }
 }
