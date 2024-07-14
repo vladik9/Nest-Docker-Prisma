@@ -26,16 +26,16 @@ lastName String?
 @@map("users")
 Cars Car[]
 }
-
 model Car{
 id Int @id @default (autoincrement())
 createdAt DateTime @default(now())
 updatedAt DateTime @updatedAt()
+name String
 year Int
 color String
 seats Int
 userId Int
-
+//making relation between user and car
 user User @relation(fields: [userId], references: [id])
 @@map("cars")
 }

@@ -1,15 +1,6 @@
-import {
-  Body,
-  Controller,
-  HttpCode,
-  HttpStatus,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
-import { TokenCheckMiddleware } from '../middleware/auth.middleware';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
-@UseGuards(TokenCheckMiddleware)
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}

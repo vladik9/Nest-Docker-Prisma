@@ -1,8 +1,9 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import * as pactum from 'pactum';
-import { AuthDto } from 'src/auth/dto';
 import { AppModule } from '../src/app.module';
+import { AuthDto } from '../src/auth/dto';
+import { CarDto } from '../src/auth/dto/car.dto';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 describe('AppController (e2e)', () => {
@@ -100,16 +101,64 @@ describe('AppController (e2e)', () => {
           .expectStatus(200);
       });
     });
-    describe('Edit user', () => {
-      // TODO: should be implemented
-      it.todo('should be editing user');
-    });
   });
   describe('Car', () => {
+    const carDto: CarDto = {
+      name: 'Toyota',
+      year: 2010,
+      color: 'red',
+      seats: 5,
+      userId: 1,
+    };
     // TODO: should be implemented
 
-    describe('Get car', () => {
-      it.todo('it should get car ');
+    it('Create a Car valid', () => {
+      return pactum
+        .spec()
+        .post('/car')
+        .withHeaders('Authorization', 'Bearer $S{userAt}')
+        .withBody(carDto)
+        .expectStatus(201);
     });
+
+    it('Should fail if Car data not valid', () => {
+      return pactum
+        .spec()
+        .post('/car')
+        .withHeaders('Authorization', 'Bearer $S{userAt}')
+        .withBody({
+          name: carDto.name,
+          color: carDto.color,
+        })
+        .expectStatus(400);
+    });
+    it('Should work on update car', () => {
+      return pactum
+        .spec()
+        .patch('/car/1')
+        .withHeaders('Authorization', 'Bearer $S{userAt}')
+        .withBody({
+          name: 'Honda',
+          year: 2010,
+          color: 'red',
+          seats: 5,
+          userId: 1,
+        })
+        .expectStatus(200);
+    });
+  });
+  it('Should return a car with id 1', () => {
+    return pactum
+      .spec()
+      .get('/car/1')
+      .withHeaders('Authorization', 'Bearer $S{userAt}')
+      .expectStatus(200);
+  });
+  it('Should delete a car with id 1', () => {
+    return pactum
+      .spec()
+      .delete('/car/1')
+      .withHeaders('Authorization', 'Bearer $S{userAt}')
+      .expectStatus(204);
   });
 });

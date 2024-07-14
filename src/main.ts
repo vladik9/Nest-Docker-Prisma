@@ -7,5 +7,6 @@ async function bootstrap() {
   //this will tell to use global validation pipes for DTO
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   await app.listen(3333);
+  console.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();
